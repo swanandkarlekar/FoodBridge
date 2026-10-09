@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Control Center — FoodBridge{% endblock %}
+
+{% block content %}
+<div class="dashboard-header" style="background: #0f2419;">
+  <div class="container dashboard-welcome">
+    <div>
+      <span style="background: rgba(231, 111, 81, 0.2); color: #f4a261; padding: 0.25rem 0.75rem; border-radius: var(--radius-pill); font-size: 0.82rem; font-weight: 700; text-transform: uppercase;">
+        Administrative Control
+      </span>
+      <h1 style="color: white; font-size: 2rem; margin-top: 0.5rem;">Platform Operations Dashboard</h1>
+      <p style="color: rgba(255,255,255,0.75); margin: 0; font-size: 0.95rem;">
+        Oversee registered users, food listings, rescue requests, and incoming inquiries.
+      </p>
+    </div>
+    <div>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Switch to User Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom: 4rem;">
+  <!-- Summary Stats -->
+  <div class="dash-stats-row">
+    <div class="dash-stat-card">
+      <span class="stat-label">Total Users</span>
+      <div class="dash-stat-value">{{ stats.total_users }}</div>
+    </div>
+    <div class="dash-stat-card">
+      <span class="stat-label">Total Food Listings</span>
+      <div class="dash-stat-value">{{ stats.total_donations }}</div>
+      <small style="color: var(--color-text-muted);">{{ stats.active_donations }} currently available</small>
+    </div>
+    <div class="dash-stat-card">
+      <span class="stat-label">Rescue Claims</span>
+      <div class="dash-stat-value" style="color: var(--color-accent);">{{ stats.total_requests }}</div>
+    </div>
+    <div class="dash-stat-card">
+      <span class="stat-label">Support Inquiries</span>
+      <div class="dash-stat-value" style="color: var(--color-warm-accent);">{{ stats.total_messages }}</div>
+      <small style="color: var(--color-text-muted);">{{ stats.unread_messages }} unread</small>
+    </div>
+  </div>
+
+  <!-- Admin Tab Navigation -->
+  <div class="admin-tabs">
+    <button type="button" class="admin-tab-btn active" data-tab="listings">Food Listings ({{ donations|length }})</button>
+    <button type="button" class="admin-tab-btn" data-tab="users">Registered Users ({{ users|length }})</button>
+    <button type="button" class="admin-tab-btn" data-tab="requests">Rescue Requests ({{ requests|length }})</button>
+    <button type="button" class="admin-tab-btn" data-tab="messages">Contact Messages ({{ messages|length }})</button>
+  </div>
+
+  <!-- Tab 1: Food Listings -->
+  <div id="tab-listings" class="admin-tab-pane active">
+    <div class="dash-section">
+      <div class="dash-section-header">
+        <h2 style="font-size: 1.25rem;">Food Donation Moderation</h2>
+        <span style="font-size: 0.85rem; color: var(--color-text-muted);">Disable inappropriate listings or inspect details</span>
+      </div>
+
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Food Title</th>
+              <th>Donor</th>
+              <th>Category</th>
+              <th>Servings</th>
+              <th>Status</th>
+              <th>Visibility</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in donations %}
+              <tr>
+                <td>#{{ d.id }}</td>
+                <td>
+                  <strong><a href="{{ url_for('donation_detail', donation_id=d.id) }}">{{ d.title }}</a></strong><br>
+                  <small style="color: var(--color-text-muted);">{{ d.city }} &bull; {{ d.created_at }}</small>
+                </td>
+                <td>
+                  {{ d.donor_name }}<br>
+                  <small style="color: var(--color-text-muted);">{{ d.donor_email }}</small>
+                </td>
+                <td><span class="category-tag">{{ d.category }}</span></td>
+                <td><strong>{{ d.servings }}</strong></td>
+                <td><span class="badge badge-{{ d.status }}">{{ d.status|capitalize }}</span></td>
+                <td>
+                  {% if d.is_active %}
+                    <span style="color: #065f46; font-weight: 600; font-size: 0.85rem;">Active</span>
+                  {% else %}
+                    <span style="color: #b91c1c; font-weight: 600; font-size: 0.85rem;">Disabled</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <form action="{{ url_for('admin_toggle_donation', donation_id=d.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if d.is_active %}
+                      <button type="submit" class="btn btn-sm btn-danger" title="Hide listing from public browse">Disable</button>
+                    {% else %}
+                      <button type="submit" class="btn btn-sm btn-primary" title="Reactivate listing">Enable</button>
+                    {% endif %}
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: Users -->
+  <div id="tab-users" class="admin-tab-pane">
+    <div class="dash-section">
+      <div class="dash-section-header">
+        <h2 style="font-size: 1.25rem;">User Directory</h2>
+      </div>
+
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Organization</th>
+              <th>City</th>
+              <th>Admin Privileges</th>
+              <th>Joined Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+              <tr>
+                <td>#{{ u.id }}</td>
+                <td><strong>{{ u.name }}</strong></td>
+                <td>{{ u.email }}</td>
+                <td><span class="category-tag">{{ u.role|upper }}</span></td>
+                <td>{{ u.organization or '-' }}</td>
+                <td>{{ u.city }}</td>
+                <td>
+                  {% if u.is_admin %}
+                    <span style="color: #b91c1c; font-weight: 700; font-size: 0.85rem;">ADMIN</span>
+                  {% else %}
+                    <span style="color: var(--color-text-light); font-size: 0.85rem;">Standard</span>
+                  {% endif %}
+                </td>
+                <td><small style="color: var(--color-text-muted);">{{ u.created_at }}</small></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 3: Requests -->
+  <div id="tab-requests" class="admin-tab-pane">
+    <div class="dash-section">
+      <div class="dash-section-header">
+        <h2 style="font-size: 1.25rem;">Food Rescue Claims</h2>
+      </div>
+
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Request ID</th>
+              <th>Listing</th>
+              <th>Requesting NGO</th>
+              <th>Servings</th>
+              <th>Message</th>
+              <th>Status</th>
+              <th>Submitted</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in requests %}
+              <tr>
+                <td>#{{ r.id }}</td>
+                <td><strong><a href="{{ url_for('donation_detail', donation_id=r.donation_id) }}">{{ r.donation_title }}</a></strong></td>
+                <td>{{ r.ngo_name }} ({{ r.ngo_email }})</td>
+                <td>{{ r.servings_requested }} meals</td>
+                <td><small>{{ r.message or '-' }}</small></td>
+                <td><span class="badge badge-{{ r.status }}">{{ r.status|capitalize }}</span></td>
+                <td><small style="color: var(--color-text-muted);">{{ r.created_at }}</small></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 4: Messages -->
+  <div id="tab-messages" class="admin-tab-pane">
+    <div class="dash-section">
+      <div class="dash-section-header">
+        <h2 style="font-size: 1.25rem;">Inquiries & Contact Tickets</h2>
+      </div>
+
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>From</th>
+              <th>Subject</th>
+              <th>Category</th>
+              <th>Message</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in messages %}
+              <tr>
+                <td>#{{ m.id }}</td>
+                <td>
+                  <strong>{{ m.name }}</strong><br>
+                  <small style="color: var(--color-text-muted);">{{ m.email }}</small>
+                </td>
+                <td><strong>{{ m.subject }}</strong></td>
+                <td><span class="category-tag">{{ m.category }}</span></td>
+                <td style="max-width: 320px; font-size: 0.88rem;">{{ m.message }}</td>
+                <td><small style="color: var(--color-text-muted);">{{ m.created_at }}</small></td>
+                <td>
+                  {% if m.is_read %}
+                    <span style="color: var(--color-text-light); font-size: 0.85rem;">Resolved</span>
+                  {% else %}
+                    <span style="color: #b45309; font-weight: 700; font-size: 0.85rem;">New</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <form action="{{ url_for('admin_toggle_message_read', message_id=m.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-secondary">
+                      {{ 'Mark New' if m.is_read else 'Mark Done' }}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

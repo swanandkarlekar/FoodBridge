@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}About Us & Our Mission — FoodBridge{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top: 3.5rem;">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">Our Mission & Purpose</span>
+      <h1 class="section-title">Transforming Surplus into Sustenance</h1>
+      <p class="section-desc">
+        FoodBridge was founded on a simple truth: wholesome food should nourish people, not fill landfills.
+      </p>
+    </div>
+
+    <!-- Mission & Vision Cards -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 4rem;">
+      <div style="background: white; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 2.5rem; box-shadow: var(--shadow-sm);">
+        <div class="brand-icon" style="margin-bottom: 1.25rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+        </div>
+        <h2 style="font-size: 1.5rem; margin-bottom: 0.75rem;">Our Mission</h2>
+        <p style="color: var(--color-text-muted); line-height: 1.7;">
+          To eliminate avoidable food waste by providing an accessible, real-time logistics platform that connects surplus food providers directly with verified local charities, soup kitchens, and volunteer networks.
+        </p>
+      </div>
+
+      <div style="background: white; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 2.5rem; box-shadow: var(--shadow-sm);">
+        <div class="brand-icon" style="margin-bottom: 1.25rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        </div>
+        <h2 style="font-size: 1.5rem; margin-bottom: 0.75rem;">Our Vision</h2>
+        <p style="color: var(--color-text-muted); line-height: 1.7;">
+          A sustainable, circular community where zero edible food is discarded, every neighborhood has reliable food security, and technology serves the public good with transparency and empathy.
+        </p>
+      </div>
+    </div>
+
+    <!-- The Food Waste Paradox -->
+    <div style="background: var(--color-cream-surface); border-radius: var(--radius-lg); padding: 3rem; margin-bottom: 4rem; border: 1px solid var(--color-border);">
+      <h2 style="font-size: 1.75rem; margin-bottom: 1rem;">The Food Waste Crisis in Numbers</h2>
+      <p style="color: var(--color-text-muted); line-height: 1.7; margin-bottom: 2rem;">
+        Every year, billions of tons of perfectly edible food are discarded while millions of families face hunger. This imbalance is not a production issue — it is an information and logistics failure. FoodBridge provides the bridge.
+      </p>
+
+      <div class="impact-grid">
+        <div class="impact-card" style="box-shadow: none;">
+          <div class="impact-value">33%</div>
+          <h4>Global Food Lost</h4>
+          <p style="font-size: 0.9rem; color: var(--color-text-muted);">One-third of all food produced worldwide goes uneaten.</p>
+        </div>
+        <div class="impact-card" style="box-shadow: none;">
+          <div class="impact-value">1 in 8</div>
+          <h4>Neighbors in Need</h4>
+          <p style="font-size: 0.9rem; color: var(--color-text-muted);">Experience food insecurity or lack regular access to balanced meals.</p>
+        </div>
+        <div class="impact-card" style="box-shadow: none;">
+          <div class="impact-value">4x</div>
+          <h4>Emissions Impact</h4>
+          <p style="font-size: 0.9rem; color: var(--color-text-muted);">Food waste produces more greenhouse gases than global commercial aviation.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Food Safety & Legal Protections -->
+    <div id="safety" style="background: white; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 3rem; margin-bottom: 4rem;">
+      <span class="section-eyebrow">Trust & Compliance</span>
+      <h2 style="font-size: 1.75rem; margin-bottom: 1rem;">Food Safety & Good Samaritan Protection</h2>
+      <p style="color: var(--color-text-muted); line-height: 1.7; margin-bottom: 1.5rem;">
+        Donors often ask: <em>"Are we liable if someone gets sick from donated food?"</em> The answer is clear: under the Bill Emerson Good Samaritan Food Donation Act, businesses and donors that donate wholesome food in good faith are shielded from civil and criminal liability.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+        <div style="border-left: 3px solid var(--color-primary); padding-left: 1rem;">
+          <h4 style="font-size: 1.05rem; margin-bottom: 0.35rem;">Temperature Control</h4>
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin: 0;">Hot foods kept at &ge; 60°C (140°F) and chilled items at &le; 4°C (40°F) until collected.</p>
+        </div>
+        <div style="border-left: 3px solid var(--color-accent); padding-left: 1rem;">
+          <h4 style="font-size: 1.05rem; margin-bottom: 0.35rem;">Allergen Disclosure</h4>
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin: 0;">Donors declare standard major allergens to protect vulnerable diners at community tables.</p>
+        </div>
+        <div style="border-left: 3px solid var(--color-warm-accent); padding-left: 1rem;">
+          <h4 style="font-size: 1.05rem; margin-bottom: 0.35rem;">Sanitized Packaging</h4>
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin: 0;">All items packed in clean, food-grade containers suitable for rapid distribution.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Call to action banner -->
+    <div style="text-align: center; padding: 2rem 0;">
+      <h3 style="margin-bottom: 1rem;">Want to bring FoodBridge to your organization?</h3>
+      <div style="display: flex; gap: 1rem; justify-content: center;">
+        <a href="{{ url_for('contact') }}" class="btn btn-primary">Reach Out to Our Team</a>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary">Create Free Account</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

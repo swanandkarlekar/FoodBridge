@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}{{ donation.title }} — FoodBridge{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top: 3rem;">
+  <div class="container">
+    <!-- Breadcrumb -->
+    <div style="margin-bottom: 1.5rem; font-size: 0.88rem; color: var(--color-text-muted);">
+      <a href="{{ url_for('donations') }}">&larr; Back to Available Donations</a>
+    </div>
+
+    <div class="detail-layout">
+      <!-- Main Donation Info Column -->
+      <div class="detail-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <span class="category-tag" style="font-size: 0.85rem; padding: 0.35rem 0.8rem;">{{ donation.category }}</span>
+          <span class="badge badge-{{ donation.status }}" style="font-size: 0.85rem; padding: 0.35rem 0.8rem;">
+            Status: {{ donation.status|capitalize }}
+          </span>
+        </div>
+
+        <h1 class="detail-title">{{ donation.title }}</h1>
+        <p style="font-size: 1.05rem; color: var(--color-text-muted); line-height: 1.7; margin-bottom: 2rem;">
+          {{ donation.description }}
+        </p>
+
+        <!-- Detailed Properties Table -->
+        <h3 style="font-size: 1.15rem; margin-bottom: 0.75rem; border-bottom: 2px solid var(--color-border-subtle); padding-bottom: 0.5rem;">
+          Donation Specifications
+        </h3>
+        <table class="info-table">
+          <tbody>
+            <tr>
+              <th>Estimated Servings</th>
+              <td><strong style="color: var(--color-primary); font-size: 1.1rem;">{{ donation.servings }}</strong> meals</td>
+            </tr>
+            <tr>
+              <th>Total Quantity</th>
+              <td>{{ donation.quantity }}</td>
+            </tr>
+            <tr>
+              <th>Pickup Deadline</th>
+              <td><strong style="color: var(--color-warm-accent);">{{ donation.pickup_deadline }}</strong></td>
+            </tr>
+            {% if donation.prepared_time %}
+              <tr>
+                <th>Prepared / Harvested</th>
+                <td>{{ donation.prepared_time }}</td>
+              </tr>
+            {% endif %}
+            <tr>
+              <th>Allergen Information</th>
+              <td>
+                {% if donation.allergens %}
+                  <span style="color: #b45309; font-weight: 600;">{{ donation.allergens }}</span>
+                {% else %}
+                  <span style="color: var(--color-text-muted);">None reported by donor</span>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th>Pickup Street Location</th>
+              <td>{{ donation.address }}, {{ donation.city }}</td>
+            </tr>
+            {% if donation.instructions %}
+              <tr>
+                <th>Special Instructions</th>
+                <td>{{ donation.instructions }}</td>
+              </tr>
+            {% endif %}
+            <tr>
+              <th>Donor Organization</th>
+              <td>{{ donation.donor_org or donation.donor_name }}</td>
+            </tr>
+            <tr>
+              <th>Donor Contact Phone</th>
+              <td>{{ donation.donor_contact or donation.donor_phone or 'Available to approved NGO' }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Incoming Requests (Visible to Owner Donor or Admin) -->
+        {% if all_requests %}
+          <div style="margin-top: 3rem; background: var(--color-cream-surface); padding: 1.75rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border);">
+            <h3 style="font-size: 1.15rem; margin-bottom: 1rem;">Incoming NGO Requests ({{ all_requests|length }})</h3>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              {% for req in all_requests %}
+                <div style="background: white; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                  <div>
+                    <div style="font-weight: 700; color: var(--color-primary);">{{ req.ngo_org or req.ngo_name }}</div>
+                    <div style="font-size: 0.85rem; color: var(--color-text-muted);">
+                      Requested {{ req.servings_requested }} servings &bull; Contact: {{ req.ngo_phone or req.ngo_email }}
+                    </div>
+                    {% if req.message %}
+                      <div style="font-size: 0.88rem; margin-top: 0.35rem; font-style: italic;">"{{ req.message }}"</div>
+                    {% endif %}
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="badge badge-{{ req.status }}">{{ req.status|capitalize }}</span>
+                    {% if req.status == 'pending' and (current_user.id == donation.donor_id or current_user.is_admin) %}
+                      <form action="{{ url_for('approve_request', request_id=req.id) }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-primary">Approve</button>
+                      </form>
+                      <form action="{{ url_for('reject_request', request_id=req.id) }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-secondary">Decline</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Action & Sidebar Column -->
+      <div class="detail-sidebar">
+        <!-- Request / Action Card -->
+        <div class="detail-sidebar-card">
+          <h3 style="font-size: 1.2rem; margin-bottom: 1rem;">Rescue Action</h3>
+          
+          {% if current_user %}
+            {% if current_user.id == donation.donor_id or current_user.is_admin %}
+              <!-- Donor Controls for their own listing -->
+              <div style="background: var(--color-sage); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;">
+                <p style="font-size: 0.88rem; font-weight: 600; color: var(--color-primary-dark); margin: 0;">
+                  You are the owner of this donation listing.
+                </p>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                {% if donation.status != 'collected' %}
+                  <form action="{{ url_for('complete_donation', donation_id=donation.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary btn-block">
+                      Mark as Collected / Picked Up
+                    </button>
+                  </form>
+                {% endif %}
+
+                {% if donation.status != 'cancelled' and donation.status != 'collected' %}
+                  <form action="{{ url_for('cancel_donation', donation_id=donation.id) }}" method="POST" data-confirm="Are you sure you want to cancel this listing?">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger btn-block">
+                      Cancel Listing
+                    </button>
+                  </form>
+                {% endif %}
+
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-block">
+                  Go to Donor Dashboard
+                </a>
+              </div>
+
+            {% elif current_user.role == 'ngo' %}
+              <!-- NGO Rescue Action -->
+              {% if user_request %}
+                <div style="background: var(--color-cream-surface); border: 1px solid var(--color-border); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
+                  <span class="badge badge-{{ user_request.status }}" style="margin-bottom: 0.5rem; display: inline-block;">
+                    Request Status: {{ user_request.status|capitalize }}
+                  </span>
+                  <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">
+                    You requested <strong>{{ user_request.servings_requested }}</strong> servings on {{ user_request.created_at }}.
+                  </p>
+                  {% if user_request.status == 'approved' %}
+                    <p style="font-size: 0.88rem; color: #065f46; font-weight: 600; margin: 0;">
+                      Your request is approved! Please coordinate pickup at: {{ donation.address }} (Phone: {{ donation.donor_contact }})
+                    </p>
+                  {% elif user_request.status == 'pending' %}
+                    <form action="{{ url_for('cancel_request', request_id=user_request.id) }}" method="POST" data-confirm="Cancel this rescue request?">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-sm btn-danger" style="margin-top: 0.5rem;">Cancel Request</button>
+                    </form>
+                  {% endif %}
+                </div>
+              {% elif donation.status == 'available' %}
+                <p style="font-size: 0.92rem; color: var(--color-text-muted); margin-bottom: 1.25rem;">
+                  As a verified NGO partner, you can request this surplus food to serve your community.
+                </p>
+                <button type="button" id="open-request-modal" class="btn btn-primary btn-block btn-lg">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Request This Donation
+                </button>
+              {% else %}
+                <p style="font-size: 0.9rem; color: var(--color-text-muted);">
+                  This food donation is currently <strong>{{ donation.status }}</strong> and not open for new requests.
+                </p>
+              {% endif %}
+
+            {% elif current_user.role == 'volunteer' %}
+              <div style="background: var(--color-cream-surface); padding: 1.25rem; border-radius: var(--radius-md);">
+                <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+                  Logged in as a Volunteer. You can view transportation rescue missions on your dashboard once an NGO request is confirmed.
+                </p>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-block">View Volunteer Dashboard</a>
+              </div>
+
+            {% else %}
+              <div style="background: var(--color-cream-surface); padding: 1.25rem; border-radius: var(--radius-md);">
+                <p style="font-size: 0.9rem; color: var(--color-text-muted);">
+                  Signed in as {{ current_user.role|capitalize }}. Only verified NGOs can submit direct rescue claims.
+                </p>
+              </div>
+            {% endif %}
+
+          {% else %}
+            <!-- Guest Callout -->
+            <div style="background: var(--color-cream-surface); padding: 1.5rem; border-radius: var(--radius-md); text-align: center;">
+              <p style="font-size: 0.92rem; color: var(--color-text-muted); margin-bottom: 1.25rem;">
+                Are you an NGO or food pantry looking to rescue this food? Sign in to claim this donation.
+              </p>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="{{ url_for('login', next=request.path) }}" class="btn btn-primary btn-block">Sign In to Request</a>
+                <a href="{{ url_for('register') }}" class="btn btn-secondary btn-block">Register as NGO</a>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Safe Food Handling Notice -->
+        <div class="detail-sidebar-card" style="background: #f8fafc;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            FoodBridge Safety Pledge
+          </h4>
+          <p style="font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.5; margin: 0;">
+            All food donations on FoodBridge are covered under safe harbor donor liability protections. Both donor and recipient agree to observe proper temperature controls during transit.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Modal Dialog for Requesting Donation -->
+<div id="request-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+  <div style="background: white; border-radius: var(--radius-lg); max-width: 500px; width: 100%; padding: 2rem; box-shadow: var(--shadow-lg); animation: slideDown 0.2s ease-out;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.25rem; margin: 0;">Request Food Donation</h3>
+      <button type="button" id="close-request-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-text-muted);">&times;</button>
+    </div>
+
+    <form action="{{ url_for('request_donation', donation_id=donation.id) }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group">
+        <label for="servings_requested" class="form-label">Servings Needed (Total Available: {{ donation.servings }})</label>
+        <input type="number" id="servings_requested" name="servings_requested" min="1" max="{{ donation.servings }}" value="{{ donation.servings }}" class="form-control" required>
+        <span class="form-hint">Request all or a portion of the available food batch.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="message" class="form-label">Pickup Notes & Estimated Arrival Time</label>
+        <textarea id="message" name="message" class="form-control" placeholder="E.g., Our van can arrive today at 4:30 PM. We have insulated thermal carriers." rows="3" required></textarea>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button type="button" onclick="document.getElementById('request-modal').style.display='none'" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit Rescue Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

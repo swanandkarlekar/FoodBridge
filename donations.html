@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Available Food Donations — FoodBridge{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top: 3rem;">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <span class="section-eyebrow">Real-Time Surplus Directory</span>
+        <h1 class="section-title" style="margin-bottom: 0.25rem;">Available Food Donations</h1>
+        <p class="section-desc">Discover wholesome surplus food ready for NGO collection and community distribution.</p>
+      </div>
+      <div>
+        <a href="{{ url_for('donate') }}" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Post a Donation
+        </a>
+      </div>
+    </div>
+
+    <!-- Search and Filter Toolbar -->
+    <div class="filter-toolbar">
+      <form action="{{ url_for('donations') }}" method="GET" class="filter-grid">
+        <div class="filter-group">
+          <label for="q" class="filter-label">Search Keywords</label>
+          <input type="text" id="q" name="q" value="{{ filters.q }}" placeholder="Search title, ingredients, street..." class="form-control">
+        </div>
+
+        <div class="filter-group">
+          <label for="category" class="filter-label">Food Category</label>
+          <select id="category" name="category" class="form-control">
+            <option value="all">All Categories</option>
+            {% for cat in categories %}
+              <option value="{{ cat }}" {% if filters.category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="city" class="filter-label">City / Region</label>
+          <select id="city" name="city" class="form-control">
+            <option value="all">All Locations</option>
+            {% for c in cities %}
+              <option value="{{ c }}" {% if filters.city == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="status" class="filter-label">Availability</label>
+          <select id="status" name="status" class="form-control">
+            <option value="available" {% if filters.status == 'available' %}selected{% endif %}>Available Only</option>
+            <option value="reserved" {% if filters.status == 'reserved' %}selected{% endif %}>Reserved</option>
+            <option value="collected" {% if filters.status == 'collected' %}selected{% endif %}>Collected</option>
+            <option value="all" {% if filters.status == 'all' %}selected{% endif %}>All Statuses</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="sort" class="filter-label">Sort Order</label>
+          <select id="sort" name="sort" class="form-control">
+            <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Newest First</option>
+            <option value="servings_desc" {% if filters.sort == 'servings_desc' %}selected{% endif %}>Most Servings</option>
+            <option value="deadline_asc" {% if filters.sort == 'deadline_asc' %}selected{% endif %}>Deadline Soonest</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="submit" class="btn btn-primary" style="height: 42px;">Filter</button>
+          <a href="{{ url_for('donations') }}" class="btn btn-secondary" style="height: 42px;" title="Reset filters">Reset</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Donations Grid -->
+    {% if donations %}
+      <div class="donations-grid">
+        {% for donation in donations %}
+          <div class="donation-card">
+            <div class="card-header-bar">
+              <span class="category-tag">{{ donation.category }}</span>
+              <span class="badge badge-{{ donation.status }}">{{ donation.status }}</span>
+            </div>
+            
+            <div class="card-body">
+              <h3 class="card-title">
+                <a href="{{ url_for('donation_detail', donation_id=donation.id) }}">{{ donation.title }}</a>
+              </h3>
+              <p class="card-desc">{{ donation.description }}</p>
+              
+              <ul class="card-meta-list">
+                <li class="card-meta-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  <span>{{ donation.address }}, {{ donation.city }}</span>
+                </li>
+                <li class="card-meta-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  <span>Pickup by: <strong>{{ donation.pickup_deadline }}</strong></span>
+                </li>
+                {% if donation.allergens %}
+                  <li class="card-meta-item" style="color: #b45309;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <span>Allergens: {{ donation.allergens }}</span>
+                  </li>
+                {% endif %}
+                <li class="card-meta-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  <span>Donor: {{ donation.donor_org or donation.donor_name }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="card-footer-bar">
+              <div>
+                <span class="servings-count">{{ donation.servings }} Servings</span>
+                <span style="font-size: 0.8rem; color: var(--color-text-muted); display: block;">{{ donation.quantity }}</span>
+              </div>
+              <a href="{{ url_for('donation_detail', donation_id=donation.id) }}" class="btn btn-sm btn-primary">
+                View & Request &rarr;
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state" style="background: white; border-radius: var(--radius-lg); border: 1px solid var(--color-border); padding: 4rem 2rem;">
+        <div class="empty-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </div>
+        <h3 class="empty-title">No matching donations found</h3>
+        <p class="empty-desc">We couldn't find any food listings matching your current search and filter criteria.</p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+          <a href="{{ url_for('donations') }}" class="btn btn-secondary">Clear All Filters</a>
+          <a href="{{ url_for('donate') }}" class="btn btn-primary">Post a Food Donation</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

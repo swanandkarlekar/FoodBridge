@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — FoodBridge{% endblock %}
+
+{% block content %}
+<!-- Dashboard Welcome Banner -->
+<div class="dashboard-header">
+  <div class="container dashboard-welcome">
+    <div>
+      <span style="background: rgba(255,255,255,0.15); color: var(--color-mint); padding: 0.25rem 0.75rem; border-radius: var(--radius-pill); font-size: 0.82rem; font-weight: 700; text-transform: uppercase;">
+        {{ current_user.role|capitalize }} Workspace
+      </span>
+      <h1 style="color: white; font-size: 2rem; margin-top: 0.5rem;">
+        Welcome, {{ current_user.name }}
+      </h1>
+      <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 0.95rem;">
+        {{ current_user.organization or 'Independent Member' }} &bull; {{ current_user.city }}
+      </p>
+    </div>
+    <div>
+      {% if current_user.role == 'donor' or current_user.is_admin %}
+        <a href="{{ url_for('donate') }}" class="btn btn-accent btn-lg" style="font-weight: 700;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          New Donation Listing
+        </a>
+      {% elif current_user.role == 'ngo' %}
+        <a href="{{ url_for('donations') }}" class="btn btn-accent btn-lg" style="font-weight: 700;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          Browse Available Food
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom: 4rem;">
+
+  <!-- =========================================================================
+       DONOR ROLE VIEW
+       ========================================================================= -->
+  {% if current_user.role == 'donor' or (current_user.is_admin and my_donations is defined) %}
+    <!-- Donor Metrics -->
+    <div class="dash-stats-row">
+      <div class="dash-stat-card">
+        <span class="stat-label">Active Listings</span>
+        <div class="dash-stat-value">{{ active_listings }}</div>
+      </div>
+      <div class="dash-stat-card">
+        <span class="stat-label">Pending Requests</span>
+        <div class="dash-stat-value" style="color: var(--color-warm-accent);">{{ pending_reqs }}</div>
+      </div>
+      <div class="dash-stat-card">
+        <span class="stat-label">Total Listings</span>
+        <div class="dash-stat-value">{{ my_donations|length }}</div>
+      </div>
+      <div class="dash-stat-card">
+        <span class="stat-label">Rescued Servings</span>
+        <div class="dash-stat-value" style="color: var(--color-accent);">{{ total_servings }}</div>
+      </div>
+    </div>
+
+    <!-- Incoming NGO Requests Section -->
+    <div class="dash-section">
+      <div class="dash-section-header">
+        <div>
+          <h2 style="font-size: 1.35rem; margin-bottom: 0.25rem;">Incoming Rescue Requests</h2>
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin: 0;">Nonprofit organizations requesting your surplus food listings.</p>
+        </div>
+      </div>
+
+      {% if incoming_requests %}
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Listing</th>
+                <th>Requesting NGO</th>
+                <th>Servings</th>
+                <th>Notes / Timing</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for req in incoming_requests %}
+                <tr>
+                  <td><strong>{{ req.donation_title }}</strong></td>
+                  <td>
+                    <strong>{{ req.ngo_org or req.ngo_name }}</strong><br>
+                    <small style="color: var(--color-text-muted);">{{ req.ngo_phone or req.ngo_email }}</small>
+                  </td>
+                  <td><strong>{{ req.servings_requested }}</strong> meals</td>
+                  <td>
+                    {% if req.message %}
+                      <span style="font-size: 0.85rem; color: var(--color-text-main);">"{{ req.message }}"</span>
+                    {% else %}
+                      <span style="color: var(--color-text-light); font-size: 0.85rem;">Standard pickup</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge badge-{{ req.status }}">{{ req.status|capitalize }}</span>
+                  </td>
+                  <td>
+                    {% if req.status == 'pending' %}
+                      <div style="display: flex; gap: 0.4rem;">
+                        <form action="{{ url_for('approve_request', request_id=req.id) }}" method="POST">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <button type="submit" class="btn btn-sm btn-primary">Approve</button>
+                        </form>
+                        <form action="{{ url_for('reject_request', request_id=req.id) }}" method="POST">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <button type="submit" class="btn btn-sm btn-secondary">Decline</button>
+                        </form>
+                      </div>
+                    {% elif req.status == 'approved' %}
+                      <span style="font-size: 0.82rem; color: #065f46; font-weight: 600;">Reserved for pickup</span>
+                    {% else %}
+                      <span style="font-size: 0.82rem; color: var(--color-text-light);">{{ req.status|capitalize }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <p class="empty-desc">No incoming NGO requests yet. Available listings appear on the public board for nonprofits to claim.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- My Food Listings Section -->
+    <div class="dash-section">
+      <div class="dash-section-header">
+        <div>
+          <h2 style="font-size: 1.35rem; margin-bottom: 0.25rem;">My Food Listings</h2>
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin: 0;">All surplus items posted under your organization.</p>
+        </div>
+        <a href="{{ url_for('donate') }}" class="btn btn-sm btn-primary">+ Add New</a>
+      </div>
+
+      {% if my_donations %}
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Servings</th>
+                <th>Pickup Deadline</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in my_donations %}
+                <tr>
+                  <td>
+                    <a href="{{ url_for('donation_detail', donation_id=d.id) }}" style="font-weight: 600;">{{ d.title }}</a>
+                  </td>
+                  <td><span class="category-tag">{{ d.category }}</span></td>
+                  <td>{{ d.servings }} ({{ d.quantity }})</td>
+                  <td>{{ d.pickup_deadline }}</td>
+                  <td><span class="badge badge-{{ d.status }}">{{ d.status|capitalize }}</span></td>
+                  <td>
+                    <div style="display: flex; gap: 0.4rem; align-items: center;">
+                      <a href="{{ url_for('donation_detail', donation_id=d.id) }}" class="btn btn-sm btn-secondary">View</a>
+                      {% if d.status == 'reserved' or d.status == 'available' %}
+                        <form action="{{ url_for('complete_donation', donation_id=d.id) }}" method="POST">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <button type="submit" class="btn btn-sm btn-primary" title="Confirm collected">Mark Collected</button>
+                        </form>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 0-7.07 17.07L12 22l7.07-2.93A10 10 0 0 0 12 2z"></path></svg>
+          </div>
+          <h3 class="empty-title">You haven't posted any food donations yet</h3>
+          <p class="empty-desc">Turn your surplus food into community meals instead of waste disposal fees.</p>
+          <a href="{{ url_for('donate') }}" class="btn btn-primary">Create Your First Listing</a>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <!-- =========================================================================
+       NGO / RECIPIENT ROLE VIEW
+       ========================================================================= -->
+  {% if current_user.role == 'ngo' or (current_user.is_admin and my_requests is defined) %}
+    <!-- NGO Metrics -->
+    <div class="dash-stats-row">
+      <div class="dash-stat-card">
+        <span class="stat-label">Total Requests</span>
+        <div class="dash-stat-value">{{ my_requests|length }}</div>
+      </div>
+      <div class="dash-stat-card">
+        <span class="stat-label">Approved Rescues</span>
+        <div class="dash-stat-value" style="color: var(--color-accent);">{{ approved_rescues }}</div>
+      </div>
+      <div class="dash-stat-card">
+        <span class="stat-label">Rescued Meals</span>
+        <div class="dash-stat-value">{{ rescued_meals }}</div>
+      </div>
+    </div>
+
+    <!-- My Donation Requests Section -->
+    <div class="dash-section">
+      <div class="dash-section-header">
+        <div>
+          <h2 style="font-size: 1.35rem; margin-bottom: 0.25rem;">My Food Rescue Claims</h2>
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin: 0;">Track pending, approved, and completed food pickups.</p>
+        </div>
+        <a href="{{ url_for('donations') }}" class="btn btn-sm btn-primary">Find More Surplus Food</a>
+      </div>
+
+      {% if my_requests %}
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Food Listing</th>
+                <th>Donor Details</th>
+                <th>Pickup Location</th>
+                <th>Requested</th>
+                <th>Deadline</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for req in my_requests %}
+                <tr>
+                  <td>
+                    <a href="{{ url_for('donation_detail', donation_id=req.donation_id) }}" style="font-weight: 600;">
+                      {{ req.donation_title }}
+                    </a><br>
+                    <span class="category-tag">{{ req.category }}</span>
+                  </td>
+                  <td>
+                    <strong>{{ req.donor_org or req.donor_name }}</strong><br>
+                    <small style="color: var(--color-text-muted);">{{ req.donor_contact }}</small>
+                  </td>
+                  <td>{{ req.pickup_address }}, {{ req.pickup_city }}</td>
+                  <td><strong>{{ req.servings_requested }}</strong> meals</td>
+                  <td>{{ req.pickup_deadline }}</td>
+                  <td><span class="badge badge-{{ req.status }}">{{ req.status|capitalize }}</span></td>
+                  <td>
+                    {% if req.status == 'pending' %}
+                      <form action="{{ url_for('cancel_request', request_id=req.id) }}" method="POST" data-confirm="Cancel this request?">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+                      </form>
+                    {% elif req.status == 'approved' %}
+                      <a href="{{ url_for('donation_detail', donation_id=req.donation_id) }}" class="btn btn-sm btn-primary">Pickup Info</a>
+                    {% else %}
+                      <a href="{{ url_for('donation_detail', donation_id=req.donation_id) }}" class="btn btn-sm btn-secondary">Details</a>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+          <h3 class="empty-title">You haven't requested any food yet</h3>
+          <p class="empty-desc">Check the real-time directory to claim available donations from local catering and grocery donors.</p>
+          <a href="{{ url_for('donations') }}" class="btn btn-primary">Browse Available Food Listings</a>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <!-- =========================================================================
+       VOLUNTEER ROLE VIEW
+       ========================================================================= -->
+  {% if current_user.role == 'volunteer' or (current_user.is_admin and available_tasks is defined) %}
+    <!-- Volunteer Metrics -->
+    <div class="dash-stats-row">
+      <div class="dash-stat-card">
+        <span class="stat-label">Open Missions</span>
+        <div class="dash-stat-value" style="color: var(--color-warm-accent);">{{ available_tasks|length }}</div>
+      </div>
+      <div class="dash-stat-card">
+        <span class="stat-label">My Active Missions</span>
+        <div class="dash-stat-value">{{ my_tasks|length - completed_tasks }}</div>
+      </div>
+      <div class="dash-stat-card">
+        <span class="stat-label">Missions Completed</span>
+        <div class="dash-stat-value" style="color: var(--color-accent);">{{ completed_tasks }}</div>
+      </div>
+    </div>
+
+    <!-- Available Rescue Missions for Volunteers -->
+    <div class="dash-section">
+      <div class="dash-section-header">
+        <div>
+          <h2 style="font-size: 1.35rem; margin-bottom: 0.25rem;">Available Transport Missions</h2>
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin: 0;">Food donations approved for rescue that need courier/transport assistance.</p>
+        </div>
+      </div>
+
+      {% if available_tasks %}
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Food Item</th>
+                <th>Pickup Location</th>
+                <th>Servings</th>
+                <th>Deadline</th>
+                <th>Donor Contact</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in available_tasks %}
+                <tr>
+                  <td><strong>{{ t.donation_title }}</strong></td>
+                  <td>{{ t.pickup_address }}, {{ t.pickup_city }}</td>
+                  <td>{{ t.servings }} meals</td>
+                  <td>{{ t.pickup_deadline }}</td>
+                  <td>{{ t.donor_name }} ({{ t.donor_phone }})</td>
+                  <td>
+                    <form action="{{ url_for('claim_task', task_id=t.id) }}" method="POST">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-sm btn-primary">Claim Mission</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <p class="empty-desc">No open volunteer courier tasks at this moment. You will see missions appear here when approved rescues require transport!</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- My Claimed Missions -->
+    <div class="dash-section">
+      <div class="dash-section-header">
+        <div>
+          <h2 style="font-size: 1.35rem; margin-bottom: 0.25rem;">My Volunteer Missions</h2>
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin: 0;">Missions you have accepted or delivered.</p>
+        </div>
+      </div>
+
+      {% if my_tasks %}
+        <div class="data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Food Item</th>
+                <th>Pickup Address</th>
+                <th>Servings</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in my_tasks %}
+                <tr>
+                  <td><strong>{{ t.donation_title }}</strong></td>
+                  <td>{{ t.pickup_address }}, {{ t.pickup_city }}</td>
+                  <td>{{ t.servings }} meals</td>
+                  <td><span class="badge badge-{{ 'available' if t.status == 'assigned' else 'collected' }}">{{ t.status|capitalize }}</span></td>
+                  <td>
+                    {% if t.status == 'assigned' %}
+                      <form action="{{ url_for('deliver_task', task_id=t.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-primary">Mark Delivered</button>
+                      </form>
+                    {% else %}
+                      <span style="color: #065f46; font-size: 0.85rem; font-weight: 600;">Delivered</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <p class="empty-desc">You have not claimed any volunteer transport missions yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
