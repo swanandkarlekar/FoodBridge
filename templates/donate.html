@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Post a Food Donation — FoodBridge{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top: 3rem;">
+  <div class="container" style="max-width: 800px;">
+    <div style="text-align: center; margin-bottom: 2.5rem;">
+      <span class="section-eyebrow">Zero Waste Initiative</span>
+      <h1 class="section-title">List Surplus Food for Rescue</h1>
+      <p class="section-desc">
+        Complete the form below to alert verified local community kitchens and shelters in your neighborhood.
+      </p>
+    </div>
+
+    <div class="auth-card" style="max-width: 100%; padding: 2.5rem;">
+      <form action="{{ url_for('donate') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <h3 style="font-size: 1.15rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; color: var(--color-primary);">
+          1. Food Information
+        </h3>
+
+        <div class="form-group">
+          <label for="title" class="form-label">Food Title / Dish Summary *</label>
+          <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Sourdough Baguettes & Croissants, or Mediterranean Buffet Trays" value="{{ form_data.title if form_data else '' }}" required minlength="3">
+          <span class="form-hint">A clear, descriptive name of the food items being donated.</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="category" class="form-label">Food Category *</label>
+            <select id="category" name="category" class="form-control" required>
+              <option value="" disabled {% if not form_data or not form_data.category %}selected{% endif %}>Select category...</option>
+              <option value="Cooked Meals" {% if form_data and form_data.category == 'Cooked Meals' %}selected{% endif %}>Cooked Meals / Banquet Trays</option>
+              <option value="Bakery" {% if form_data and form_data.category == 'Bakery' %}selected{% endif %}>Bakery & Bread</option>
+              <option value="Fresh Produce" {% if form_data and form_data.category == 'Fresh Produce' %}selected{% endif %}>Fresh Produce (Fruits & Vegetables)</option>
+              <option value="Dairy" {% if form_data and form_data.category == 'Dairy' %}selected{% endif %}>Dairy & Chilled Beverages</option>
+              <option value="Packaged Goods" {% if form_data and form_data.category == 'Packaged Goods' %}selected{% endif %}>Packaged / Shelf-Stable Goods</option>
+              <option value="Beverages" {% if form_data and form_data.category == 'Beverages' %}selected{% endif %}>Beverages</option>
+              <option value="Other" {% if form_data and form_data.category == 'Other' %}selected{% endif %}>Other Edible Surplus</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="servings" class="form-label">Estimated Servings *</label>
+            <input type="number" id="servings" name="servings" min="1" class="form-control" placeholder="e.g. 50" value="{{ form_data.servings if form_data else '' }}" required>
+            <span class="form-hint">Approximate number of individual meals this will provide.</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quantity" class="form-label">Quantity & Containers *</label>
+            <input type="text" id="quantity" name="quantity" class="form-control" placeholder="e.g. 4 large catering pans, 3 wooden crates" value="{{ form_data.quantity if form_data else '' }}" required>
+          </div>
+
+          <div class="form-group">
+            <label for="prepared_time" class="form-label">Preparation Time / Date</label>
+            <input type="text" id="prepared_time" name="prepared_time" class="form-control" placeholder="e.g. Today at 2:00 PM, or Harvested Yesterday" value="{{ form_data.prepared_time if form_data else '' }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description" class="form-label">Food Description & Packaging *</label>
+          <textarea id="description" name="description" class="form-control" rows="3" placeholder="Provide details on preparation, items included, whether items are chilled or warm, and container types." required minlength="10">{{ form_data.description if form_data else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="allergens" class="form-label">Dietary & Allergen Notes</label>
+          <input type="text" id="allergens" name="allergens" class="form-control" placeholder="e.g. Contains Gluten and Dairy; Nut-Free; Vegetarian" value="{{ form_data.allergens if form_data else '' }}">
+          <span class="form-hint">Critical for soup kitchens and shelters accommodating dietary restrictions.</span>
+        </div>
+
+        <h3 style="font-size: 1.15rem; margin: 2rem 0 1.25rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; color: var(--color-primary);">
+          2. Logistics & Pickup Details
+        </h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="pickup_deadline" class="form-label">Pickup Deadline Date & Time *</label>
+            <input type="text" id="pickup_deadline" name="pickup_deadline" class="form-control" placeholder="e.g. 2026-10-15 18:00 or Today by 7 PM" value="{{ form_data.pickup_deadline if form_data else '' }}" required>
+            <span class="form-hint">Food must be collected before this window closes.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="city" class="form-label">Pickup City *</label>
+            <input type="text" id="city" name="city" class="form-control" placeholder="e.g. Metropolis" value="{{ form_data.city if form_data else 'Metropolis' }}" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="address" class="form-label">Street Address & Venue *</label>
+          <input type="text" id="address" name="address" class="form-control" placeholder="e.g. 450 Market Street, Suite 100" value="{{ form_data.address if form_data else '' }}" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="donor_contact" class="form-label">Contact Phone / Dispatcher *</label>
+            <input type="text" id="donor_contact" name="donor_contact" class="form-control" placeholder="e.g. +1 (555) 234-5678" value="{{ form_data.donor_contact if form_data else '' }}" required>
+          </div>
+
+          <div class="form-group">
+            <label for="instructions" class="form-label">Pickup Access Instructions</label>
+            <input type="text" id="instructions" name="instructions" class="form-control" placeholder="e.g. Loading dock in rear alley, ask for Chef Marcus" value="{{ form_data.instructions if form_data else '' }}">
+          </div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+          <a href="{{ url_for('donations') }}" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary btn-lg">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Publish Donation Listing
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

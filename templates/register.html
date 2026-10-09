@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Create an Account — FoodBridge{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper" style="max-width: 600px;">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="brand-icon" style="margin: 0 auto 1rem; width: 44px; height: 44px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="8.5" cy="7" r="4"></circle>
+          <line x1="20" y1="8" x2="20" y2="14"></line>
+          <line x1="23" y1="11" x2="17" y2="11"></line>
+        </svg>
+      </div>
+      <h1>Join the FoodBridge Network</h1>
+      <p>Select your account role and help eradicate local food waste.</p>
+    </div>
+
+    <form action="{{ url_for('register') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <!-- Role Selection Cards -->
+      <label class="form-label" style="margin-bottom: 0.6rem;">I want to register as a: *</label>
+      <div class="role-selector-grid">
+        <label>
+          <input type="radio" name="role" value="donor" class="role-radio-input" {% if not form_data or form_data.role == 'donor' or not form_data.role %}checked{% endif %}>
+          <div class="role-radio-label">
+            <div style="font-size: 1.35rem; margin-bottom: 0.25rem;">🍴</div>
+            <div>Food Donor</div>
+            <div style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 0.2rem;">Restaurant / Hotel</div>
+          </div>
+        </label>
+
+        <label>
+          <input type="radio" name="role" value="ngo" class="role-radio-input" {% if form_data and form_data.role == 'ngo' %}checked{% endif %}>
+          <div class="role-radio-label">
+            <div style="font-size: 1.35rem; margin-bottom: 0.25rem;">🤝</div>
+            <div>NGO / Shelter</div>
+            <div style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 0.2rem;">Charity / Pantry</div>
+          </div>
+        </label>
+
+        <label>
+          <input type="radio" name="role" value="volunteer" class="role-radio-input" {% if form_data and form_data.role == 'volunteer' %}checked{% endif %}>
+          <div class="role-radio-label">
+            <div style="font-size: 1.35rem; margin-bottom: 0.25rem;">🚲</div>
+            <div>Volunteer</div>
+            <div style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 0.2rem;">Rescue Courier</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name" class="form-label">Full Name *</label>
+          <input type="text" id="name" name="name" class="form-control" placeholder="Jane Doe" value="{{ form_data.name if form_data else '' }}" required minlength="2">
+        </div>
+
+        <div class="form-group">
+          <label for="organization" class="form-label">Organization / Business</label>
+          <input type="text" id="organization" name="organization" class="form-control" placeholder="e.g. Hope Shelter or Bistro 5" value="{{ form_data.organization if form_data else '' }}">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address *</label>
+          <input type="email" id="email" name="email" class="form-control" placeholder="jane@example.org" value="{{ form_data.email if form_data else '' }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="phone" class="form-label">Phone Number</label>
+          <input type="tel" id="phone" name="phone" class="form-control" placeholder="+1 (555) 000-0000" value="{{ form_data.phone if form_data else '' }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="city" class="form-label">City / Region *</label>
+        <input type="text" id="city" name="city" class="form-control" placeholder="e.g. Metropolis" value="{{ form_data.city if form_data else 'Metropolis' }}" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="password" class="form-label">Password * (Min 8 characters)</label>
+          <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required minlength="8">
+        </div>
+
+        <div class="form-group">
+          <label for="confirm_password" class="form-label">Confirm Password *</label>
+          <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="••••••••" required minlength="8">
+        </div>
+      </div>
+
+      <div style="margin: 1.5rem 0;">
+        <label style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.85rem; color: var(--color-text-muted); cursor: pointer;">
+          <input type="checkbox" required checked style="margin-top: 0.2rem;">
+          <span>I agree to follow local food safety standards and the FoodBridge Good Samaritan community guidelines.</span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg">
+        Create FoodBridge Account
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.5rem; font-size: 0.92rem; color: var(--color-text-muted);">
+      Already have an account? <a href="{{ url_for('login') }}" style="font-weight: 600;">Sign in here &rarr;</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

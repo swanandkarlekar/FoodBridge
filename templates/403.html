@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Access Forbidden — FoodBridge{% endblock %}
+
+{% block content %}
+<section class="section" style="text-align: center; padding: 6rem 0;">
+  <div class="container" style="max-width: 600px;">
+    <div style="font-size: 5rem; font-weight: 900; color: var(--color-warm-accent); line-height: 1; margin-bottom: 1rem;">
+      403
+    </div>
+    <h1 style="font-size: 2rem; margin-bottom: 1rem;">Access Forbidden</h1>
+    <p style="color: var(--color-text-muted); font-size: 1.05rem; margin-bottom: 2rem;">
+      You do not have administrative or authorization privileges to access this restricted page or action.
+    </p>
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+      <a href="{{ url_for('index') }}" class="btn btn-primary">Return to Home</a>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">My Dashboard</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

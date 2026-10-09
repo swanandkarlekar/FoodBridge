@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — FoodBridge{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="brand-icon" style="margin: 0 auto 1rem; width: 44px; height: 44px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2a10 10 0 0 0-7.07 17.07L12 22l7.07-2.93A10 10 0 0 0 12 2z"></path>
+          <path d="M12 6c-2.5 0-4.5 2-4.5 4.5S10 15 12 18c2-3 4.5-5.5 4.5-7.5S14.5 6 12 6z"></path>
+        </svg>
+      </div>
+      <h1>Sign in to FoodBridge</h1>
+      <p>Manage your food donations, rescue requests, and volunteer tasks.</p>
+    </div>
+
+    <form action="{{ url_for('login', next=next) }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <input type="email" id="email" name="email" class="form-control" placeholder="name@example.org" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <label for="password" class="form-label" style="margin-bottom: 0;">Password</label>
+        </div>
+        <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer;">
+          <input type="checkbox" name="remember" value="1">
+          <span>Remember me</span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg">
+        Sign In to FoodBridge
+      </button>
+    </form>
+
+    <!-- Quick Demo Accounts Switcher -->
+    <div class="demo-box">
+      <div class="demo-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        Instant Demo Login (Click to Auto-fill)
+      </div>
+      <div class="demo-buttons-grid">
+        <button type="button" class="btn-demo" onclick="fillDemoCredentials('donor@foodbridge.org', 'FoodBridge123!')">
+          🍴 <strong>Food Donor</strong><br><small>Marcus Vance (Bistro)</small>
+        </button>
+        <button type="button" class="btn-demo" onclick="fillDemoCredentials('ngo@foodbridge.org', 'FoodBridge123!')">
+          🤝 <strong>Verified NGO</strong><br><small>Sarah Jenkins (Hope)</small>
+        </button>
+        <button type="button" class="btn-demo" onclick="fillDemoCredentials('volunteer@foodbridge.org', 'FoodBridge123!')">
+          🚲 <strong>Volunteer Hero</strong><br><small>Alex Rivera (Couriers)</small>
+        </button>
+        <button type="button" class="btn-demo" onclick="fillDemoCredentials('admin@foodbridge.org', 'AdminSecret2026!')">
+          🛡️ <strong>Platform Admin</strong><br><small>System Administrator</small>
+        </button>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 1.75rem; font-size: 0.92rem; color: var(--color-text-muted);">
+      Don't have an account yet? <a href="{{ url_for('register') }}" style="font-weight: 600;">Create an account &rarr;</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

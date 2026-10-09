@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found — FoodBridge{% endblock %}
+
+{% block content %}
+<section class="section" style="text-align: center; padding: 6rem 0;">
+  <div class="container" style="max-width: 600px;">
+    <div style="font-size: 5rem; font-weight: 900; color: var(--color-primary-light); line-height: 1; margin-bottom: 1rem;">
+      404
+    </div>
+    <h1 style="font-size: 2rem; margin-bottom: 1rem;">Page Not Found</h1>
+    <p style="color: var(--color-text-muted); font-size: 1.05rem; margin-bottom: 2rem;">
+      The food listing or page you are looking for may have been collected, expired, or relocated.
+    </p>
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+      <a href="{{ url_for('donations') }}" class="btn btn-primary">Browse Available Food</a>
+      <a href="{{ url_for('index') }}" class="btn btn-secondary">Return Home</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
